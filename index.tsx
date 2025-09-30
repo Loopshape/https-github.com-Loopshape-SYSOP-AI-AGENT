@@ -24,12 +24,35 @@ body{font-family:'SF Mono',Consolas,'Courier New',monospace;background:var(--bg)
 .output{flex-grow:1;white-space:pre-wrap;}.input-line{display:flex;border-top:1px solid var(--border);padding-top:10px;margin-top:10px;}
 .prompt{color:var(--accent);font-weight:bold;margin-right:10px;}
 input{flex-grow:1;background:transparent;border:none;color:var(--text);font-family:inherit;font-size:inherit;outline:none;}
-.log{color:var(--secondary);}.success{color:var(--success);}.error{color:var(--error);}</style></head>
+.log{color:var(--secondary);}.success{color:var(--success);}.error{color:var(--error);}
+.loading-line{display:flex;align-items:center;color:var(--secondary);margin:5px 0;}
+.spinner{width:14px;height:14px;border:2px solid var(--border);border-top:2px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}</style></head>
 <body><div class="container"><h1>🤖 AI Autonomic Synthesis Platform v31</h1><div class="terminal"><div id="output" class="output"><div class="log">🚀 AI Agent ready. System initialized.</div></div><div class="input-line"><span class="prompt">ai&gt;</span><input type="text" id="commandInput" placeholder="Enter your high-level goal..." autofocus></div></div></div>
 <script>
 const output=document.getElementById('output'),input=document.getElementById('commandInput');
 function addOutput(text,className='log'){const d=document.createElement('div');d.className=className;d.textContent=text;output.appendChild(d);output.scrollTop=output.scrollHeight;}
-async function executeCommand(cmd){addOutput(\`ai> \${cmd}\`,'prompt');input.disabled=true;try{const r=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmd})}),d=await r.json();const f=d.output.replace(/\\u001b\\[[0-9;]*m/g,'');addOutput(f,d.success?'success':'error');}catch(e){addOutput(\`[CLIENT ERROR] \${e.message}\`,'error');}finally{input.disabled=false;input.focus();}}
+async function executeCommand(cmd){
+    addOutput(\`ai> \${cmd}\`,'prompt');
+    input.disabled=true;
+    const loader=document.createElement('div');
+    loader.className='loading-line';
+    loader.innerHTML='<div class="spinner"></div><span>Processing...</span>';
+    output.appendChild(loader);
+    output.scrollTop=output.scrollHeight;
+    try{
+        const r=await fetch('/api/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmd})});
+        const d=await r.json();
+        const f=d.output.replace(/\\u001b\\[[0-9;]*m/g,'');
+        addOutput(f,d.success?'success':'error');
+    }catch(e){
+        addOutput(\`[CLIENT ERROR] \${e.message}\`,'error');
+    }finally{
+        loader.remove();
+        input.disabled=false;
+        input.focus();
+    }
+}
 input.addEventListener('keypress',e=>{if(e.key==='Enter'){const c=input.value.trim();if(c){executeCommand(c);input.value='';}}});
 </script></body></html>`;
 
