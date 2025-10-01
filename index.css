@@ -1,0 +1,88 @@
+:root {
+  --background-color: #0d1117;
+  --text-color: #c9d1d9;
+  --accent-color: #58a6ff;
+  --border-color: #30363d;
+  --header-bg: #161b22;
+  
+  --color-dir: #58a6ff;
+  --color-js: #f7df1e;
+  --color-json: #f08080;
+  --color-css: #563d7c;
+  --color-html: #e34c26;
+  --color-md: #adbac7;
+  --color-other: #8b949e;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  background-color: var(--background-color);
+  color: var(--text-color);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+header {
+  background-color: var(--header-bg);
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--accent-color);
+  font-weight: 500;
+}
+
+.main-container {
+  flex-grow: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.visualization-container {
+  flex-grow: 1;
+  position: relative;
+  transition: width 0.3s ease-in-out;
+  width: 100%;
+}
+
+.main-container.panel-open .visualization-container {
+  width: calc(100% - 350px);
+}
+
+svg {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+svg:active {
+  cursor: grabbing;
+}
+
+.link {
+  fill: none;
+  stroke: var(--border-color);
+  stroke-opacity: 0.6;
+  stroke-width: 1.5px;
+}
+
+.node {
+  cursor: pointer;
+  transition: transform 0.1s ease-in-out;

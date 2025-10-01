@@ -9,9 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "child_process": "^1.0.2",
-    "http": "^0.0.1-security",
-    "fs": "^0.0.1-security"
+    "react": "^19.1.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

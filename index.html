@@ -1,9 +1,21 @@
-<script type="importmap">
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Structure Visualizer</title>
+    <link rel="stylesheet" href="index.css" />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script type="importmap">
 {
   "imports": {
-    "child_process": "https://aistudiocdn.com/child_process@^1.0.2",
-    "http": "https://aistudiocdn.com/http@^0.0.1-security",
-    "fs": "https://aistudiocdn.com/fs@^0.0.1-security"
+    "react/": "https://aistudiocdn.com/react@^19.1.1/"
   }
 }
 </script>
+</head>
+  <body>
+    <main id="root"></main>
+    <script type="module" src="index.tsx"></script>
+  </body>
+</html>
