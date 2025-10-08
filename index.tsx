@@ -2,8 +2,12 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-import React, { useState, useRef, useEffect, useCallback } from "https://esm.sh/react";
-import { createRoot } from "https://esm.sh/react-dom/client";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createRoot } from "react-dom/client";
+
+// Allow TypeScript to recognize the global variables from the CDN scripts
+declare var marked: { parse: (markdown: string) => string };
+declare var hljs: { highlightElement: (element: HTMLElement) => void };
 
 // In a real application, this data would be fetched from a backend API
 // that analyzes the actual project directory.
@@ -36,7 +40,7 @@ const projectData = {
     },
     { name: "package.json", content: `{ "name": "project-visualizer", "version": "1.0.0" }` },
     { name: "package-lock.json" },
-    { name: "README.md", content: `# Project Structure Visualizer\n\nThis application visualizes a project's file structure.` },
+    { name: "README.md", content: `# Project Structure Visualizer\n\nThis application visualizes a project's file structure and provides AI-powered summaries for file contents.` },
   ],
 };
 
@@ -96,6 +100,50 @@ const Legend = () => (
   </div>
 );
 
+const ContentViewer = ({ file }) => {
+  const codeRef = useRef(null);
+  
+  const getLanguage = (filename) => {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'js': return 'javascript';
+      case 'ts': return 'typescript';
+      case 'tsx': return 'typescript';
+      case 'css': return 'css';
+      case 'json': return 'json';
+      case 'html': return 'xml'; // Use xml for html highlighting
+      case 'md': return 'markdown';
+      default: return 'plaintext';
+    }
+  };
+
+  const lang = getLanguage(file.name);
+
+  useEffect(() => {
+    if (codeRef.current && hljs) {
+      hljs.highlightElement(codeRef.current);
+    }
+  }, [file.content, lang]);
+
+  if (!file.content) {
+    return <p style={{ fontStyle: 'italic', color: 'var(--color-other)' }}>No content to display.</p>;
+  }
+
+  if (lang === 'markdown' && marked) {
+    const html = marked.parse(file.content);
+    return <div className="markdown-content" dangerouslySetInnerHTML={{ __html: html }} />;
+  }
+  
+  return (
+    <pre>
+      <code ref={codeRef} className={`language-${lang} hljs`}>
+        {file.content}
+      </code>
+    </pre>
+  );
+};
+
+
 const DetailsPanel = ({ node, summary, isLoading, onClose }) => {
   if (!node) return null;
 
@@ -132,13 +180,19 @@ const DetailsPanel = ({ node, summary, isLoading, onClose }) => {
         )}
       </div>
       {node.data.content && (
-        <div className="content-summary">
+        <div className="ai-summary">
           <h3>AI Content Summary</h3>
           {isLoading ? (
             <div className="spinner" role="status" aria-label="Loading summary"></div>
           ) : (
             <p>{summary || "Could not generate summary."}</p>
           )}
+        </div>
+      )}
+      {node.data.content && (
+        <div className="content-viewer">
+          <h3>File Content</h3>
+          <ContentViewer file={node.data} />
         </div>
       )}
     </div>
