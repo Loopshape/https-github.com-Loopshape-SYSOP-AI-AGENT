@@ -1,5 +1,7 @@
 {
   "name": "AGENT NEMODIAN",
   "description": "'ARTIFICIAL GLOBALISATION INTERPRETER' that enhances developer productivity by automating tasks and providing intelligent assistance.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }
