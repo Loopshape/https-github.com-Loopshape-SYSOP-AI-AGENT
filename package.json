@@ -1,5 +1,5 @@
 {
-  "name": "agent-nemodian",
+  "name": "omega-void-recursive-ai-atom-portal",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,8 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@google/genai": "latest",
-    "three": "^0.180.0"
+
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

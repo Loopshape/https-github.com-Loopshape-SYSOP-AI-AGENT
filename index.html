@@ -2,39 +2,180 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AGENT NEMODIAN</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="index.css">
+<title>Omega Void Recursive AI Atom Portal</title>
+<style>html,body{margin:0;padding:0;overflow:hidden;background:#000}canvas{display:block}</style>
 </head>
 <body>
-<div id="overlay">AGENT NEMODIAN</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/controls/OrbitControls.js';
+import { UnrealBloomPass } from 'https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { EffectComposer } from 'https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/postprocessing/RenderPass.js';
 
-<div id="ai-container">
-    <div id="ai-panel">
-        <div class="panel-header">AGENT NEMODIAN :: Code Analysis_</div>
-        <textarea id="code-input" placeholder="/* Paste code here or click START DICTATION */"></textarea>
-        <div id="controls-container">
-            <button id="analyze-btn">ANALYZE CODE</button>
-            <button id="audio-btn">START DICTATION</button>
-            <div id="audio-status" title="Audio Status"></div>
-        </div>
-        <div id="suggestion-output-container">
-            <pre><code id="suggestion-output">// Suggestions will appear here.</code></pre>
-        </div>
-    </div>
-</div>
+// ----- Scene Setup -----
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,5000);
+camera.position.set(0,0,800);
 
-<script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.run/@google/genai",
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
-    "three/": "https://aistudiocdn.com/three@^0.180.0/"
-  }
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const composer=new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene,camera));
+const bloomPass=new UnrealBloomPass(new THREE.Vector2(window.innerWidth,window.innerHeight),1.2,0.4,0.85);
+composer.addPass(bloomPass);
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.enablePan=false;
+
+// ----- Starfield -----
+const starsGeo=new THREE.BufferGeometry();
+const starCount=2000;
+const starPositions=new Float32Array(starCount*3);
+for(let i=0;i<starCount*3;i++) starPositions[i]=(Math.random()-0.5)*5000;
+starsGeo.setAttribute('position',new THREE.BufferAttribute(starPositions,3));
+const starsMat=new THREE.PointsMaterial({color:0xffffff,size:1.5,transparent:true,opacity:0.8});
+scene.add(new THREE.Points(starsGeo,starsMat));
+
+// ----- Nucleus -----
+const nucleusGeometry=new THREE.SphereGeometry(50,64,64);
+const nucleusMaterial=new THREE.MeshPhysicalMaterial({
+  color:0xB400B4, emissive:0x880088, emissiveIntensity:1.5,
+  roughness:0.2, metalness:0.7, clearcoat:1.0, clearcoatRoughness:0.2
+});
+const nucleus=new THREE.Mesh(nucleusGeometry,nucleusMaterial);
+scene.add(nucleus);
+
+// ----- Glow Sprite -----
+const glowMat=new THREE.SpriteMaterial({
+  map:new THREE.TextureLoader().load('https://i.imgur.com/Oq0tI0k.png'),
+  color:0xB400B4, transparent:true, blending:THREE.AdditiveBlending
+});
+const glow=new THREE.Sprite(glowMat);
+glow.scale.set(150,150,1);
+nucleus.add(glow);
+
+// ----- Lights -----
+scene.add(new THREE.AmbientLight(0x330033,0.4));
+const pointLight=new THREE.PointLight(0xffffff,1.2,0);
+pointLight.position.set(200,200,200);
+scene.add(pointLight);
+
+// ----- Electron / Orbit System -----
+const ORBIT_COUNT=8;
+const electrons=[];
+const trails=[];
+
+for(let i=0;i<ORBIT_COUNT;i++){
+  const geo=new THREE.SphereGeometry(5,16,16);
+  const mat=new THREE.MeshStandardMaterial({
+    color:new THREE.Color(`hsl(${270+i*15},100%,70%)`),
+    emissive:new THREE.Color(`hsl(${270+i*15},100%,50%)`),
+    emissiveIntensity:1.2
+  });
+  const mesh=new THREE.Mesh(geo,mat);
+  mesh.userData={radius:150+i*25,baseSpeed:0.01+Math.random()*0.02,angle:Math.random()*Math.PI*2,zAngle:Math.random()*Math.PI*2,trailPositions:[],microParticles:[]};
+  electrons.push(mesh);
+  scene.add(mesh);
+
+  const trailGeo=new THREE.BufferGeometry();
+  const trailMat=new THREE.PointsMaterial({color:mat.color,size:3,transparent:true,opacity:0.8});
+  const positions=new Float32Array(50*3);
+  const trailPoints=new THREE.Points(trailGeo,trailMat);
+  trailGeo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  scene.add(trailPoints);
+  trails.push({mesh,points:trailPoints,positions});
 }
-</script>
 
-<script type="module" src="index.tsx"></script>
+// ----- Audio Reactive -----
+const audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+  const src=audioCtx.createMediaStreamSource(stream);
+  const analyser=audioCtx.createAnalyser();
+  src.connect(analyser);
+  analyser.fftSize=64;
+  const dataArray=new Uint8Array(analyser.frequencyBinCount);
+  function react(){
+    analyser.getByteFrequencyData(dataArray);
+    const avg=dataArray.reduce((a,b)=>a+b,0)/dataArray.length;
+    nucleus.scale.setScalar(1+avg/300);
+    glow.scale.setScalar(150*(1+avg/400));
+    requestAnimationFrame(react);
+  }
+  react();
+}).catch(e=>console.log("Audio unavailable:",e));
+
+// ----- AI Forces / Chaos Auto-Grow -----
+function aiForces(el,index){
+  // 2244: orbit perturbation
+  el.userData.radius += Math.sin(Date.now()*0.0005+index)*0.3;
+  el.userData.speed=el.userData.baseSpeed*(1+0.3*Math.sin(Date.now()*0.001+index*2));
+
+  // loop: emissive pulse
+  const pulse=Math.sin(Date.now()*0.003+index)*0.5+0.5;
+  el.material.emissiveIntensity=0.8+pulse*0.8;
+
+  // coin: color chaos
+  const hue=(270+index*15+Math.sin(Date.now()*0.001+index*5)*30)%360;
+  el.material.color.setHSL(hue/360,1.0,0.7);
+  el.material.emissive.setHSL(hue/360,1.0,0.5);
+
+  // --- Chaos Auto-Grow: spawn micro-particles ---
+  if(Math.random()<0.01 && el.userData.microParticles.length<12){
+    const mgeo=new THREE.SphereGeometry(2,8,8);
+    const mmat=new THREE.MeshStandardMaterial({color:el.material.color.clone(),emissive:el.material.emissive.clone(),emissiveIntensity:1.0});
+    const m=new THREE.Mesh(mgeo,mmat);
+    m.userData={radius:Math.random()*30+10,angle:Math.random()*Math.PI*2,speed:0.02+Math.random()*0.03};
+    el.userData.microParticles.push(m);
+    scene.add(m);
+  }
+
+  // Update micro-particles
+  el.userData.microParticles.forEach(mp=>{
+    mp.userData.angle+=mp.userData.speed;
+    const r=el.userData.radius+mp.userData.radius;
+    mp.position.set(Math.cos(mp.userData.angle)*r,Math.sin(mp.userData.angle)*r*0.3,Math.sin(mp.userData.angle)*r);
+  });
+}
+
+// ----- Animate Loop -----
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+  const time=Date.now()*0.001;
+  nucleus.rotation.y=time*0.3;
+
+  electrons.forEach((el,i)=>{
+    aiForces(el,i);
+
+    el.userData.angle+=el.userData.speed;
+    el.userData.zAngle+=el.userData.speed*0.4;
+    const r=el.userData.radius;
+    el.position.set(Math.cos(el.userData.angle)*r,Math.sin(el.userData.zAngle)*20,Math.sin(el.userData.angle)*r);
+
+    // Update trail
+    el.userData.trailPositions.push(el.position.clone());
+    if(el.userData.trailPositions.length>50) el.userData.trailPositions.shift();
+    const posArray=trails[i].positions;
+    el.userData.trailPositions.forEach((p,idx)=>{
+      posArray[idx*3]=p.x; posArray[idx*3+1]=p.y; posArray[idx*3+2]=p.z;
+    });
+    trails[i].points.geometry.attributes.position.needsUpdate=true;
+  });
+
+  composer.render();
+}
+animate();
+
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  composer.setSize(window.innerWidth,window.innerHeight);
+});
+</script>
 </body>
 </html>

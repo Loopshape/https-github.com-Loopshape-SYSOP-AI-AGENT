@@ -1,6 +1,6 @@
 {
-  "name": "AGENT NEMODIAN",
-  "description": "'ARTIFICIAL GLOBALISATION INTERPRETER' that enhances developer productivity by automating tasks and providing intelligent assistance.",
+  "name": "Omega Void Recursive AI Atom Portal",
+  "description": "An interactive, audio-reactive 3D visualization of an atom, built with Three.js.",
   "requestFramePermissions": [
     "microphone"
   ]
