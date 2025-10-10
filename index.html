@@ -309,6 +309,7 @@ navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
     const avg=dataArray.reduce((a,b)=>a+b,0)/dataArray.length;
     nucleus.scale.setScalar(1+avg/300);
     glow.scale.setScalar(150*(1+avg/400));
+    starsMat.size = 1.5 + avg / 250; // Stars react to audio
     requestAnimationFrame(react);
   }
   react();
